@@ -1,0 +1,124 @@
+---
+// src/components/ProductGrid.astro
+import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
+
+// 1. 获取所有文档
+const allDocs = await getCollection('docs');
+
+// 2. 筛选产品入口页
+const products = allDocs
+  .filter((doc) => {
+    const id = doc.id;
+
+    // 排除站点根首页 (ID 为 'index')
+    if (id === 'index') return false;
+
+    // 核心逻辑：只要 ID 中不包含 "/"，就说明它是顶级目录（即产品目录）
+    // Starlight 的 docsLoader 会自动把 'product1/index.md' 的 ID 处理为 'product1'
+    return !id.includes('/');
+  })
+  .map((doc) => ({
+    title: doc.data.title,
+    description: doc.data.description,
+    
+    // 🔴 修复点：Astro 5+ Content Layer 使用 id 代替了 slug
+    href: `/${doc.id}/`,
+    
+    // 安全获取封面图
+    image: doc.data.hero?.image?.file, 
+  }));
+---
+
+<div class="product-grid">
+  {products.map((product) => (
+    <a href={product.href} class="product-card">
+      {product.image && (
+        <div class="image-container">
+           <Image src={product.image} alt={product.title} width={400} />
+        </div>
+      )}
+      <div class="content">
+        <h3>{product.title}</h3>
+        <p>{product.description}</p>
+      </div>
+    </a>
+  ))}
+
+  {products.length === 0 && (
+    <div class="empty-state">
+      <p>暂无产品文档。</p>
+    </div>
+  )}
+</div>
+
+<style>
+  /* 样式保持不变 */
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+  .product-card {
+    text-decoration: none !important;
+    color: var(--sl-color-text-accent);
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background: var(--sl-color-black);
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  .product-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--sl-color-accent);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+  .image-container {
+    aspect-ratio: 16/9;
+    overflow: hidden;
+    background: var(--sl-color-gray-6);
+    border-bottom: 1px solid var(--sl-color-gray-5);
+  }
+  .image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+  .product-card:hover .image-container img {
+    transform: scale(1.05);
+  }
+  .content {
+    padding: 1.25rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .content h3 {
+    margin: 0 0 0.5rem 0 !important;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--sl-color-white);
+  }
+  .content p {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--sl-color-gray-3);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 2rem;
+    background: var(--sl-color-gray-6);
+    border-radius: 0.5rem;
+  }
+</style>
