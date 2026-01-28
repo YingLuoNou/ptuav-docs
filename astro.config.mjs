@@ -3,6 +3,7 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import fs from 'node:fs';
 import path from 'node:path';
+import edgeoneAdapter from "@edgeone/astro";
 
 function getProductSidebarGroups() {
   const docsPath = path.resolve('./src/content/docs');
@@ -51,6 +52,7 @@ function getProductSidebarGroups() {
 
 // https://astro.build/config
 export default defineConfig({
+	adapter: edgeoneAdapter(),
 	integrations: [
 		starlight({
 			title: 'Phoenixtech Wiki',
@@ -61,7 +63,7 @@ export default defineConfig({
 			sidebar: [
 				{
 					label: '网站首页',
-					link: 'http://192.168.2.110:4321',
+					link: 'https://www.plumesky.com',
 				},
 				{
 					label: '文档首页',
